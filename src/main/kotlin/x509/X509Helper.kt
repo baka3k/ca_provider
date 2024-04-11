@@ -1,3 +1,5 @@
+package x509
+
 import org.bouncycastle.asn1.DERIA5String
 import org.bouncycastle.asn1.DEROctetString
 import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers
@@ -91,21 +93,20 @@ object X509Helper {
     fun newSelfSignedCACert(
         subject: X500Name, keyPair: KeyPair, expirationMillis: Long
     ): X509Certificate {
-        val now: Date = Date()
-        val builder: X509v3CertificateBuilder = initCertBuilder(
+        val notBefore = Date()
+        val notAfter = Date(notBefore.time + expirationMillis)
+        val builder = initCertBuilder(
             subject,  // for self-signed certs, issuer == subject
-            now, Date(
-                now.time
-                        + expirationMillis
-            ), subject, keyPair.public
+            notBefore,
+            notAfter,
+            subject,
+            keyPair.public
         )
         builder.addExtension(Extension.basicConstraints, true, BasicConstraints(true)) // is a CA
         builder.addExtension(
-            Extension.keyUsage, true, KeyUsage(
-                (KeyUsage.digitalSignature
-                        or KeyUsage.keyCertSign
-                        or KeyUsage.cRLSign)
-            )
+            Extension.keyUsage,
+            true,
+            KeyUsage(KeyUsage.digitalSignature or KeyUsage.keyCertSign or KeyUsage.cRLSign)
         )
         return buildAndSignCertificate(keyPair.private, builder)
     }
@@ -167,19 +168,20 @@ object X509Helper {
     fun newCert(
         caCert: X509Certificate,
         caKeyPair: KeyPair,
-        certSubject: X500Name?,
-        certPublicKey: PublicKey?,
+        certSubject: X500Name,
+        certPublicKey: PublicKey,
         expirationMillis: Long
     ): X509Certificate {
         require(caKeyPair.public == caCert.publicKey) { "CA private key does not match the public key in the CA cert" }
-        val now = Date()
+        val notBefore = Date()
+        val notAfter = Date(notBefore.time + expirationMillis)
+        val x500Name = X500Name(caCert.getIssuerX500Principal().name)
         val builder = initCertBuilder(
-            X500Name(caCert.issuerDN.name), now, Date(
-                now.time
-                        + expirationMillis
-            ),
-            certSubject!!,
-            certPublicKey!!
+            x500Name,
+            notBefore,
+            notAfter,
+            certSubject,
+            certPublicKey
         )
         builder.addExtension(Extension.basicConstraints, true, BasicConstraints(false)) // not a CA
         builder.addExtension(
@@ -455,6 +457,7 @@ object X509Helper {
         return JcaX509CertificateConverter().setProvider(BouncyCastleProvider.PROVIDER_NAME).getCertificate(certHolder)
     }
 }
+
 enum class X509KeyType {
     RSA,
     EC

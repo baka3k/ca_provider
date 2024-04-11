@@ -1,3 +1,5 @@
+package common
+
 import java.util.*
 
 /**
@@ -27,7 +29,7 @@ enum class KeyStoreFileType(
          * Converts a property value to a StoreFileType enum. If the property value
          * is `null` or an empty string, returns `null`.
          * @param propertyValue the property value.
-         * @return the KeyStoreFileType, or `null` if
+         * @return the common.KeyStoreFileType, or `null` if
          * `propertyValue` is `null` or empty.
          * @throws IllegalArgumentException if `propertyValue` is not
          * one of "JKS", "PEM", "BCFKS", "PKCS12", or empty/null.
@@ -47,7 +49,7 @@ enum class KeyStoreFileType(
          * If the file name ends with ".bckfs", returns `StoreFileType.BCKFS`.
          * Otherwise, throws an IllegalArgumentException.
          * @param filename the filename of the key store or trust store file.
-         * @return a KeyStoreFileType.
+         * @return a common.KeyStoreFileType.
          * @throws IllegalArgumentException if the filename does not end with
          * ".jks", ".pem", "p12" or "bcfks".
          */
@@ -66,15 +68,15 @@ enum class KeyStoreFileType(
 
         /**
          * If `propertyValue` is not null or empty, returns the result
-         * of `KeyStoreFileType.fromPropertyValue(propertyValue)`. Else,
-         * returns the result of `KeyStoreFileType.fromFileName(filename)`.
-         * @param propertyValue property value describing the KeyStoreFileType, or
+         * of `common.KeyStoreFileType.fromPropertyValue(propertyValue)`. Else,
+         * returns the result of `common.KeyStoreFileType.fromFileName(filename)`.
+         * @param propertyValue property value describing the common.KeyStoreFileType, or
          * null/empty to auto-detect the type from the file
          * name.
          * @param filename file name of the key store file. The file extension is
-         * used to auto-detect the KeyStoreFileType when
+         * used to auto-detect the common.KeyStoreFileType when
          * `propertyValue` is null or empty.
-         * @return a KeyStoreFileType.
+         * @return a common.KeyStoreFileType.
          * @throws IllegalArgumentException if `propertyValue` is not
          * one of "JKS", "PEM", "PKCS12", "BCFKS", or empty/null.
          * @throws IllegalArgumentException if `propertyValue`is empty

@@ -1,3 +1,5 @@
+package x509
+
 import java.io.Closeable
 import java.security.NoSuchAlgorithmException
 import javax.net.ssl.SSLContext

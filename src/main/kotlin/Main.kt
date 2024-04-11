@@ -33,7 +33,7 @@ fun App() {
 val coroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 fun gentCert() {
     coroutineScope.launch {
-        X509Test().run()
+        X509RunTest().run()
     }
 }
 fun main() = application {

@@ -1,3 +1,6 @@
+package x509
+
+import common.KeyStoreFileType
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -40,8 +43,8 @@ class X509Context(
     private val keyStoreKeyType: X509KeyType
 
     companion object {
-        private const val TRUST_STORE_PREFIX = "zk_test_ca"
-        private const val KEY_STORE_PREFIX = "zk_test_key"
+        private const val TRUST_STORE_PREFIX = "ca_test"
+        private const val KEY_STORE_PREFIX = "key_test"
 
         /**
          * Returns the X509KeyType of the given key pair.
@@ -55,6 +58,11 @@ class X509Context(
                 X509KeyType.EC
             }
         }
+
+        fun ASN1(): String {
+//            return MethodHandles.lookup().lookupClass().canonicalName
+            return "baka3k"
+        }
     }
 
     init {
@@ -66,18 +74,22 @@ class X509Context(
         trustStoreKeyType = keyPairToType(trustStoreKeyPair)
         keyStoreKeyType = keyPairToType(keyStoreKeyPair)
 
-        val caNameBuilder = X500NameBuilder(BCStyle.INSTANCE)
-        caNameBuilder.addRDN(BCStyle.CN, MethodHandles.lookup().lookupClass().canonicalName + " Root CA")
-        println(MethodHandles.lookup().lookupClass().canonicalName + " Root CA")
-        println(caNameBuilder.build())
-        trustStoreCertificate =
-            X509Helper.newSelfSignedCACert(caNameBuilder.build(), trustStoreKeyPair, trustStoreCertExpirationMillis)
-        val nameBuilder = X500NameBuilder(BCStyle.INSTANCE)
-        nameBuilder.addRDN(BCStyle.CN, MethodHandles.lookup().lookupClass().canonicalName + " Zookeeper Test")
+        val trustStoreCANameBuilder = X500NameBuilder(BCStyle.INSTANCE)
+        trustStoreCANameBuilder.addRDN(BCStyle.CN, ASN1() + " Root CA")
+        trustStoreCertificate = X509Helper.newSelfSignedCACert(
+            trustStoreCANameBuilder.build(),
+            trustStoreKeyPair,
+            trustStoreCertExpirationMillis
+        )
+
+
+        val keystoreNameBuilder = X500NameBuilder(BCStyle.INSTANCE).apply {
+            addRDN(BCStyle.CN, ASN1() + " keyStore Test")
+        }
         keyStoreCertificate = X509Helper.newCert(
             trustStoreCertificate,
             trustStoreKeyPair,
-            nameBuilder.build(),
+            keystoreNameBuilder.build(),
             keyStoreKeyPair.public,
             keyStoreCertExpirationMillis
         )
@@ -137,6 +149,7 @@ class X509Context(
             val trustStoreJksFile =
                 File.createTempFile(TRUST_STORE_PREFIX, KeyStoreFileType.JKS.defaultFileExtension, tempDir)
             trustStoreJksFile.deleteOnExit()
+            println("getTrustStoreJksFile() trustStorePassword:$trustStorePassword")
             FileOutputStream(trustStoreJksFile).use { trustStoreOutputStream ->
                 val bytes = X509Helper.certToJavaTrustStoreBytes(trustStoreCertificate, trustStorePassword)
                 trustStoreOutputStream.write(bytes)
@@ -326,7 +339,7 @@ class X509Context(
      * <pre>
      *     X509TestContext testContext = ...; // create the test context
      *     X509Util x509Util = new QuorumX509Util();
-     *     testContext.setSystemProperties(x509Util, KeyStoreFileType.JKS, KeyStoreFileType.JKS);
+     *     testContext.setSystemProperties(x509Util, common.KeyStoreFileType.JKS, common.KeyStoreFileType.JKS);
      *     // The returned context will use the key store and trust store created by the test context.
      *     SSLContext ctx = x509Util.getDefaultSSLContext();
      * </pre>
@@ -357,7 +370,7 @@ class X509Context(
 
     /**
      * Clears system properties set by
-     * {@link #setSystemProperties(X509Util, KeyStoreFileType, KeyStoreFileType)}.
+     * {@link #setSystemProperties(X509Util, common.KeyStoreFileType, common.KeyStoreFileType)}.
      * @param x509Util the X509Util to read property keys from.
      */
     fun clearSystemProperties(x509Util: X509Util) {
